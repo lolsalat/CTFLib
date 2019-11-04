@@ -8,7 +8,7 @@ I will add JavaDoc and more examples at some point. (As well as more content)
 ### Code snippets
 
 #### Http GET and POST requests
-Sending GET and POST requests is easy and customizable.
+Sending GET and POST requests is easy (finally yey).
 
 ```java
 /*
