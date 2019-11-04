@@ -70,7 +70,7 @@ postResponse = Requests.post("https://google.com", new byte[] {1, 2, 3, 4}, Para
 ```
 
 #### Responses
-Every successful requests yields a response.
+Every successful request yields a response.
 They can do quite some stuff
 
 ```java
