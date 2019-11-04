@@ -1,6 +1,8 @@
 # CTFLib
 This requires ApacheHTTPCLient library as well as the Google GSON library (cause Steam login gives me JSON responses)
 
+Works with Java11 idk about lower versions (Should not require any major changes if you really need that though)
+
 I will add JavaDoc and more examples at some point. (As well as more content)
 
 ### Code snippets
