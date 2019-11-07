@@ -26,10 +26,21 @@ public class Requests {
 	
 	private static Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
 	
+	/**
+	 * Creates a new HttpSession
+	 */
 	public static HttpSession session() {
 		return new HttpSession();
 	}
 	
+	/**
+	 * Post request with data
+	 * @param url 
+	 * @param data
+	 * @param parameters
+	 * @return a Response
+	 * @throws IllegalStateException on Error
+	 */
 	public static Response post(String url, byte[] data, Parameters... parameters) {
 		try {
 			return postRequest(url, data, parameters);
@@ -42,6 +53,16 @@ public class Requests {
 		}
 	}
 	
+	/**
+	 * Post request with data
+	 * @param url
+	 * @param data
+	 * @param parameters
+	 * @return a Response
+	 * @throws URISyntaxException
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 */
 	public static Response postRequest(String url, byte[] data, Parameters... parameters) throws URISyntaxException, ClientProtocolException, IOException {
 		CloseableHttpClient client = HttpClients.createDefault();
 		URIBuilder builder = new URIBuilder(url);
@@ -91,6 +112,13 @@ public class Requests {
 		return new Response(new Parameters(response_headers, ParameterType.HEADER), setCookie, response.getStatusLine().getStatusCode(), response_data);
 	}
 	
+	/**
+	 * Post request without data
+	 * @param url
+	 * @param parameters
+	 * @return a Response
+	 * @throws IllegalStatException on Error
+	 */
 	public static Response post(String url, Parameters... parameters) {
 		try {
 			return postRequest(url, parameters);
@@ -103,7 +131,17 @@ public class Requests {
 		}
 	}
 	
+	/**
+	 * Post request without data
+	 * @param url
+	 * @param parameters
+	 * @return a Response
+	 * @throws IllegalStatException on Error
+	 */
 	public static Response postRequest(String url, Parameters... parameters) throws URISyntaxException, ClientProtocolException, IOException {
+		
+		// TODO join code with code of other post request (no need to do the same stuff twice)
+		
 		CloseableHttpClient client = HttpClients.createDefault();
 		URIBuilder builder = new URIBuilder(url);
 	
@@ -164,6 +202,15 @@ public class Requests {
 	}
 		
 	
+	/**
+	 * Get request
+	 * @param url
+	 * @param parameters
+	 * @return a Response
+	 * @throws URISyntaxException
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 */
 	public static Response getRequest(String url, Parameters... parameters) throws URISyntaxException, ClientProtocolException, IOException {
 		CloseableHttpClient client = HttpClients.createDefault();
 		URIBuilder builder = new URIBuilder(url);
@@ -211,23 +258,44 @@ public class Requests {
 		return new Response(new Parameters(response_headers, ParameterType.HEADER), setCookie, response.getStatusLine().getStatusCode(), data);
 	}
 	
+	/**
+	 * Adds post parameters to a post request <br>
+	 * They will be added as UrlEncoded entity
+	 * @param post
+	 * @param params
+	 */
 	private static void addPostParams(HttpPost post, Parameters params) {
 		assert(params.type == ParameterType.POST);
 		UrlEncodedFormEntity entity = new UrlEncodedFormEntity(params.params);
 		post.setEntity(entity);
 	}
 	
+	/**
+	 * Adds cookies to a request
+	 * @param request
+	 * @param params
+	 */
 	private static void addCookieParams(HttpRequestBase request, Parameters params) {
 		assert(params.type == ParameterType.COOKIE);
 		request.addHeader("Cookie", params.cookieString(DEFAULT_CHARSET));
 	}
 	
+	/**
+	 * Adds header fields to a request
+	 * @param request
+	 * @param params
+	 */
 	private static void addHeaderParams(HttpRequestBase request, Parameters params) {
 		assert(params.type == ParameterType.HEADER);
 		for(NameValuePair param : params.params)
 			request.addHeader(param.getName(), param.getValue());
 	}
 	
+	/**
+	 * Adds get parameters to request
+	 * @param uri
+	 * @param params
+	 */
 	private static void addGetParams(URIBuilder uri, Parameters params) {
 		assert(params.type == ParameterType.GET);
 		for(NameValuePair param : params.params)
