@@ -8,8 +8,10 @@ public @interface Task {
 
 	public String name() default "Unknown Task";
 	
-	public String flagPattern() default "{..*}";
+	public String flagPattern() default "\\{..*\\}";
 	
 	public String encoding() default "UTF-8";
+	
+	public String[] params() default {};
 	
 }

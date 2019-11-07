@@ -15,6 +15,9 @@ import java.util.regex.Pattern;
 
 public class TaskExecutor {
 
+	private static Map<Class<?>, Map<String, Object>> defaultVariables;
+	private static Map<Class<?>, Function<Object, Result>> defaultReturnFunctions;
+	
 	private Map<Class<?>, Map<String, Object>> variables;
 	private Map<Class<?>, Function<Object, Result>> returnFunctions;
 	
@@ -25,10 +28,21 @@ public class TaskExecutor {
 	private Collection<String> collectedFlags;
 	private String taskName;
 	
+	static {
+		defaultReturnFunctions = new HashMap<>();
+		defaultVariables = new HashMap<>();
+		addDefaultReturnFunction(Boolean.class, b -> b ? Result.SUCCESS : Result.FAIL);
+		addDefaultReturnFunction(Result.class, r -> r);
+		addDefaultReturnFunction(Boolean.TYPE, b -> b ? Result.SUCCESS : Result.FAIL);
+	}
+	
 	public TaskExecutor() {
 		
 		variables = new HashMap<>();
 		returnFunctions = new HashMap<>();
+		
+		variables.putAll(defaultVariables);
+		returnFunctions.putAll(defaultReturnFunctions);
 		
 		flagOut = new ByteArrayOutputStream();		
 		flagStream = new PrintStream(flagOut);
@@ -59,8 +73,6 @@ public class TaskExecutor {
 		};
 		addVariable(PrintStream.class, "out", out);
 		
-		addReturnFunction(Boolean.class, b -> b ? Result.SUCCESS : Result.FAIL);
-		addReturnFunction(Result.class, r -> r);
 	}
 	
 	public Map<String, ExecutionResult<?>> wholeClass(Class<?> clzz){
@@ -83,6 +95,11 @@ public class TaskExecutor {
 		returnFunctions.put(type, x -> function.apply((T)x));
 	}
 	
+	@SuppressWarnings("unchecked")
+	public static <T> void addDefaultReturnFunction(Class<T> type, Function<T, Result> function) {
+		defaultReturnFunctions.put(type, x -> function.apply((T)x));
+	}
+	
 	public  <T> void addVariable(Class<T> type, String name, T value) {
 		if(variables.containsKey(type)) {
 			variables.get(type).put(name, value);
@@ -100,7 +117,7 @@ public class TaskExecutor {
 		
 		while(m.find()) {
 			amount ++;
-			String flag = s.substring(m.start(), m.end()+1);
+			String flag = s.substring(m.start(), m.end());
 			collectedFlags.add(flag);
 		}
 		
@@ -170,7 +187,6 @@ public class TaskExecutor {
 	@SuppressWarnings("unchecked")
 	public <T> T constructArg(String name, Class<T> type) {
 		Map<String, Object> options = variables.get(type);
-		
 		if(options == null) {
 			throw new IllegalArgumentException(String.format("Cannot construct argument for Parameter '%s' with type %s", name, type.getName()));
 		}
