@@ -6,6 +6,7 @@ public enum Result {
 	FAIL,
 	UNKNOWN,
 	EXCEPTION,
+	TIMEOUT,
 	NO_EXEC
 	
 	

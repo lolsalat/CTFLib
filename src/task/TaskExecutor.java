@@ -9,12 +9,23 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import util.Utils;
+
 public class TaskExecutor {
 
+	/*
+	 *  TODO:
+	 *  	verbose output (result, flags, etc.)
+	 *  	add timeout (kinda done)
+	 *  	add multi-threading ? (probably not, as there is not too much use to it I think, if it is needed it can easily be done within the task)
+	 *  	synchronize output (only if multi-threading :D)
+	 */
+	
 	private static Map<Class<?>, Map<String, Object>> defaultVariables;
 	private static Map<Class<?>, Function<Object, Result>> defaultReturnFunctions;
 	
@@ -27,6 +38,8 @@ public class TaskExecutor {
 	private Pattern flagPattern;
 	private Collection<String> collectedFlags;
 	private String taskName;
+	
+	private long timeout = -1;
 	
 	static {
 		defaultReturnFunctions = new HashMap<>();
@@ -43,7 +56,8 @@ public class TaskExecutor {
 		
 		variables.putAll(defaultVariables);
 		returnFunctions.putAll(defaultReturnFunctions);
-		
+
+		addReturnFunction(Void.TYPE, b -> collectedFlags.isEmpty() ? Result.UNKNOWN : Result.SUCCESS);
 		flagOut = new ByteArrayOutputStream();		
 		flagStream = new PrintStream(flagOut);
 		addVariable(PrintStream.class, "flags", flagStream);	
@@ -84,7 +98,7 @@ public class TaskExecutor {
 			
 			Task t = m.getAnnotation(Task.class);
 			
-			ret.put(t.name(), execute(m, m.getReturnType()));
+			ret.put(t.value(), execute(m));
 		}
 		
 		return ret;
@@ -98,6 +112,20 @@ public class TaskExecutor {
 	@SuppressWarnings("unchecked")
 	public static <T> void addDefaultReturnFunction(Class<T> type, Function<T, Result> function) {
 		defaultReturnFunctions.put(type, x -> function.apply((T)x));
+	}
+	
+	public void setTimeout(long millis) {
+		timeout = millis;
+	}
+	
+	public void addVariable(String name, Object value) {
+		if(variables.containsKey(value.getClass())) {
+			variables.get(value.getClass()).put(name, value);
+		} else {
+			Map<String, Object> map = new HashMap<>();
+			map.put(name, value);
+			variables.put(value.getClass(), map);
+		}
 	}
 	
 	public  <T> void addVariable(Class<T> type, String name, T value) {
@@ -132,8 +160,23 @@ public class TaskExecutor {
 		
 	}
 	
+	public <T> ExecutionResult<T> execute(Class<?> clazz, String name){
+		try {
+			for(Method m : clazz.getMethods()) {
+				if(m.isAnnotationPresent(Task.class)) {
+					if(m.getDeclaredAnnotation(Task.class).value().equals(name)) {
+						return execute(m);
+					}
+				}
+			}
+			throw new IllegalArgumentException(String.format("Task '%s' was not found in class '%s'", name, clazz.getName()));
+		} catch (SecurityException e) {
+			throw new IllegalArgumentException(String.format("Cannot execute task '%s' (class: %s)", name, clazz.getName()));
+		}
+	}
+	
 	@SuppressWarnings("unchecked")
-	public <T> ExecutionResult<T> execute(Method m, T returnType) {
+	public <T> ExecutionResult<T> execute(Method m) {
 		
 		
 		if(!m.isAnnotationPresent(Task.class))
@@ -142,30 +185,39 @@ public class TaskExecutor {
 		Task t = m.getAnnotation(Task.class);
 		
 		flagPattern = Pattern.compile(t.flagPattern());
-		taskName = t.name();
+		taskName = t.value();
 		
 		Object[] args = constructArgs(m);
 		
 		newFlags();
 		
 		try {
-			Object returnValue = m.invoke(null, args);
+			Optional<Object> returnValue = Utils.withTimeout(() -> {
+				try {
+					return m.invoke(null, args);
+				} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+					throw new RuntimeException("Cannot invoke method", e);
+				}
+			}, timeout);
 			
 			findFlags(new String(flagOut.toByteArray(), t.encoding()));
 			Collection<String> collectedFlags = this.collectedFlags;
 			flagOut.reset();
 			
 			Result result;
-			if(returnFunctions.containsKey(m.getReturnType())) {
-				result = returnFunctions.get(m.getReturnType()).apply(returnValue);
+			if(returnValue == null) {
+				result = returnFunctions.get(m.getReturnType()).apply(null);
+			} else if(returnValue.isEmpty()) {
+				result = Result.TIMEOUT;
+			} else if(returnFunctions.containsKey(m.getReturnType())) {
+				result = returnFunctions.get(m.getReturnType()).apply(returnValue.get());
 			} else {
 				result = Result.UNKNOWN;
 			}
-			return ExecutionResult.create(collectedFlags, null, result, (T)returnValue);
+			return ExecutionResult.create(collectedFlags, null, result, returnValue == null ? null : returnValue.isEmpty() ? null : (T)returnValue.get());
 			
-			
-		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-			return ExecutionResult.create(Result.NO_EXEC, e);
+		} catch(RuntimeException ex) {
+			return ExecutionResult.create(Result.NO_EXEC, ex);
 		} catch(Exception e) {
 			return ExecutionResult.create(Result.EXCEPTION, e);
 		}
@@ -178,7 +230,16 @@ public class TaskExecutor {
 		Object[] result = new Object[params.length];
 		
 		for(int i = 0; i < params.length; i++) {
-			result[i] = constructArg(params[i].getName(), params[i].getType());
+			
+			String name;
+			
+			if(params[i].isAnnotationPresent(Name.class)) {
+				name = params[i].getAnnotation(Name.class).value();
+			} else {
+				name = params[i].getName();
+			}
+			
+			result[i] = constructArg(name, params[i].getType());
 		}
 		
 		return result;

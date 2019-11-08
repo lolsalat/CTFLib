@@ -24,6 +24,10 @@ public class ExecutionResult<T> {
 		return Optional.empty();
 	}
 	
+	public boolean timedOut() {
+		return result == Result.TIMEOUT;
+	}
+	
 	public boolean wasExecuted() {
 		return result != Result.NO_EXEC;
 	}
@@ -67,6 +71,10 @@ public class ExecutionResult<T> {
 	
 	public static <T> ExecutionResult<T> create(Result result, Exception exception){
 		return new ExecutionResult<T>(new LinkedList<>(), exception, result, null);
+	}
+
+	public String getFlag() {
+		return flags.iterator().next();
 	}
 	
 }
