@@ -16,6 +16,21 @@ public class Utils {
 
 	public static ExecutorService executor = new ThreadPoolExecutor(0, 12, 2, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
 	
+	public static String hexChars = "0123456789abcdef";
+	
+	public static String toHex(byte[] bytes) {
+		
+		StringBuilder hex = new StringBuilder();
+		
+		for(byte b : bytes) {
+			int i = b & 0xFF;
+			hex.append(hexChars.charAt(i / 16)).append(hexChars.charAt(i % 16));
+		}
+		
+		
+		return hex.toString();
+	}
+	
 	public static byte[] XOR(BigInteger a, BigInteger b) {
 		return XOR(a.toByteArray(), b.toByteArray());
 	}
