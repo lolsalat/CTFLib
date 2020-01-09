@@ -18,6 +18,10 @@ public class Utils {
 	
 	public static final String hexChars = "0123456789abcdef";
 	
+	public static long address64(long value) {
+		return new BigInteger(p64(value)).longValue();
+	}
+	
 	public static String hex(byte[] data) {
 		StringBuilder builder = new StringBuilder();
 		
@@ -28,6 +32,20 @@ public class Utils {
 		}
 		
 		return builder.toString();
+	}
+
+	public static long address64(String address) {
+		return new BigInteger(address + "", 16).longValue();
+	}
+	
+	public static byte[] p64(long address) {
+		byte[] addr = new BigInteger(address +"").toByteArray();
+		byte[] ret = new byte[8];
+		
+		for(int i = 0; i < addr.length;i++) {
+			ret[i] = addr[addr.length-i-1];
+		}
+		return ret;
 	}
 	
 	public static byte[] XOR(BigInteger a, BigInteger b) {

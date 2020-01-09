@@ -27,7 +27,6 @@ public class BlackJack {
 		
 		System.out.println(blackJack.readln());
 		
-		
 		blackJack.close();
 	}
 	

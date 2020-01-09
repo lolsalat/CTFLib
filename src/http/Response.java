@@ -3,6 +3,8 @@ package http;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Response {
 
@@ -12,6 +14,16 @@ public class Response {
 	public final int statusCode;
 	public final byte[] data;
 	public final Parameters setCookie;
+	
+	public String extract(String regex, int front, int end) {
+		Pattern p = Pattern.compile(regex);
+		Matcher m = p.matcher(text());
+		if(m.find()) {
+			String s = m.group();
+			return s.substring(front, s.length()-end);
+		}
+		throw new IllegalStateException("Regex did not match");
+	}
 	
 	public Response(Parameters header, Parameters setCookie, int statusCode, byte[] data) {
 		this.header = header;

@@ -22,7 +22,7 @@ public abstract class Connection {
 	private boolean outputDead;
 	private boolean verbose;
 	
-	public static Connection remote(String host, int port) {
+	public static InputStreamOutputStreamConnection remote(String host, int port) {
 		try {
 			// TODO close socket somehow xD
 			@SuppressWarnings("resource")
@@ -34,7 +34,7 @@ public abstract class Connection {
 		}
 	}
 	
-	public static Connection process(String... command) {
+	public static InputStreamOutputStreamConnection process(String... command) {
 		
 		// TODO this will redirect error stream to STDERR which is kinda not really what we want :D
 		

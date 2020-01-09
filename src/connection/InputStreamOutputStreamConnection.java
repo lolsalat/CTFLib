@@ -6,8 +6,8 @@ import java.io.OutputStream;
 
 public class InputStreamOutputStreamConnection extends Connection{
 
-	private final InputStream in;
-	private final OutputStream out;
+	public final InputStream in;
+	public final OutputStream out;
 	
 	public InputStreamOutputStreamConnection(InputStream in, OutputStream out) {
 		this.in = in;
