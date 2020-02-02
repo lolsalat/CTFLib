@@ -4,13 +4,17 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -19,8 +23,10 @@ import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
+
 
 public class Requests {
 	
@@ -121,7 +127,11 @@ public class Requests {
 	 */
 	public static Response post(String url, Parameters... parameters) {
 		try {
-			return postRequest(url, parameters);
+			try {
+				return postRequest(url, parameters);
+			} catch (KeyManagementException | NoSuchAlgorithmException e) {
+				throw new IllegalStateException("KeyManagementException | NoSuchAlgorithmException", e);
+			}
 		} catch (ClientProtocolException e) {
 			throw new IllegalStateException("ClientProtocolException", e);
 		} catch (URISyntaxException e) {
@@ -136,16 +146,18 @@ public class Requests {
 	 * @param url
 	 * @param parameters
 	 * @return a Response
+	 * @throws KeyManagementException 
+	 * @throws NoSuchAlgorithmException 
 	 * @throws IllegalStatException on Error
 	 */
-	public static Response postRequest(String url, Parameters... parameters) throws URISyntaxException, ClientProtocolException, IOException {
+	public static Response postRequest(String url, Parameters... parameters) throws URISyntaxException, ClientProtocolException, IOException, KeyManagementException, NoSuchAlgorithmException {
 		
-		// TODO join code with code of other post request (no need to do the same stuff twice)
-		
-		CloseableHttpClient client = HttpClients.createDefault();
-		URIBuilder builder = new URIBuilder(url);
 	
+		HttpClient client = HttpClientBuilder.create().build();
+		URIBuilder builder = new URIBuilder(url);
+		
 		HttpPost request = new HttpPost();
+		
 
 		for(Parameters params : parameters) {
 			switch(params.type) {
@@ -170,7 +182,7 @@ public class Requests {
 		
 		request.setURI(builder.build());
 	
-		CloseableHttpResponse response = client.execute(request);
+		HttpResponse response = client.execute(request);
 
 		List<NameValuePair> response_headers = new ArrayList<>();
 		
@@ -184,14 +196,17 @@ public class Requests {
 		
 		byte[] response_data = entity == null ? null : EntityUtils.toByteArray(entity);
 		
-		client.close();
 		
 		return new Response(new Parameters(response_headers, ParameterType.HEADER), setCookie, response.getStatusLine().getStatusCode(), response_data);
 	}
 	
-	public static Response get(String url, Parameters... parameters) {
+	public static Response get(String url, Parameters... parameters)  {
 		try {
-			return getRequest(url, parameters);
+			try {
+				return getRequest(url, parameters);
+			} catch (KeyManagementException | NoSuchAlgorithmException e) {
+				throw new IllegalStateException("KeyManagementException | NoSuchAlgorithmException", e);
+			}
 		} catch (ClientProtocolException e) {
 			throw new IllegalStateException("ClientProtocolException", e);
 		} catch (URISyntaxException e) {
@@ -210,9 +225,12 @@ public class Requests {
 	 * @throws URISyntaxException
 	 * @throws ClientProtocolException
 	 * @throws IOException
+	 * @throws KeyManagementException 
+	 * @throws NoSuchAlgorithmException 
 	 */
-	public static Response getRequest(String url, Parameters... parameters) throws URISyntaxException, ClientProtocolException, IOException {
-		CloseableHttpClient client = HttpClients.createDefault();
+	public static Response getRequest(String url, Parameters... parameters) throws URISyntaxException, ClientProtocolException, IOException, KeyManagementException, NoSuchAlgorithmException {
+
+		HttpClient client = HttpClientBuilder.create().build();
 		URIBuilder builder = new URIBuilder(url);
 	
 		HttpGet request = new HttpGet();
@@ -239,7 +257,7 @@ public class Requests {
 		
 		request.setURI(builder.build());
 	
-		CloseableHttpResponse response = client.execute(request);
+		HttpResponse response = client.execute(request);
 
 		List<NameValuePair> response_headers = new ArrayList<>();
 		
@@ -252,8 +270,6 @@ public class Requests {
 		Parameters setCookie = Parameters.COOKIE(response.getHeaders("Set-Cookie"));
 		
 		byte[] data = entity == null ? null : EntityUtils.toByteArray(entity);
-		
-		client.close();
 		
 		return new Response(new Parameters(response_headers, ParameterType.HEADER), setCookie, response.getStatusLine().getStatusCode(), data);
 	}

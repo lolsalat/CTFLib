@@ -16,7 +16,7 @@ public class Parameters {
 	
 	public final Collection<NameValuePair> params;
 	public final ParameterType type;
-	
+	public boolean encode = true;
 	
 	public static Parameters POST(String ... params) {
 		return new Parameters(ParameterType.POST, params);
@@ -70,7 +70,7 @@ public class Parameters {
 		StringBuilder sb = new StringBuilder();
 		
 		for(NameValuePair param : params) {
-			sb.append(';').append(URLEncoder.encode(param.getName(), charset)).append("=").append(URLEncoder.encode(param.getValue(), charset));
+			sb.append(';').append((encode ? URLEncoder.encode(param.getName(), charset) : param.getName())).append("=").append((encode ? URLEncoder.encode(param.getValue(), charset) : param.getValue()));
 		}
 		
 		return sb.substring(1);
@@ -96,7 +96,6 @@ public class Parameters {
 	}
 
 	public void addOrUpdate(NameValuePair param) {
-		
 		NameValuePair remove = null;
 		
 		for(NameValuePair p : params) {

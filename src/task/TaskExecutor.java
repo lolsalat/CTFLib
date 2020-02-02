@@ -156,10 +156,6 @@ public class TaskExecutor {
 		collectedFlags = new HashSet<String>();
 	}
 	
-	public void prepare() {
-		
-	}
-	
 	public <T> ExecutionResult<T> execute(Class<?> clazz, String name){
 		try {
 			for(Method m : clazz.getMethods()) {

@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.ProcessBuilder.Redirect;
 import java.net.Socket;
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
@@ -16,11 +17,12 @@ public abstract class Connection {
 
 	public static Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
 	
-	private Charset charset = DEFAULT_CHARSET;
+	public Charset charset = DEFAULT_CHARSET;
 	
 	private boolean inputDead;
 	private boolean outputDead;
 	private boolean verbose;
+
 	
 	public static InputStreamOutputStreamConnection remote(String host, int port) {
 		try {
@@ -43,6 +45,7 @@ public abstract class Connection {
 		Process p;
 		try {
 			p = builder.start();
+			System.out.println(p.pid());
 		} catch (IOException e) {
 			throw new IllegalStateException("IOException while starting process!");
 		}
@@ -237,6 +240,10 @@ public abstract class Connection {
 		}
 	}
 	
+	public void send(ByteBuffer buffer) {
+		send(buffer.array());
+	}
+	
 	public void send(Object o) {
 		send(o.toString());
 	}
@@ -247,6 +254,17 @@ public abstract class Connection {
 	
 	public void send(String text) {
 		send(text.getBytes(charset));
+	}
+	
+	public void sendln(byte[] bytes) {
+		try {
+			write(bytes);
+			write((byte)'\n');
+			flush();
+		} catch(IOException e) {
+			outputDead = true;
+			throw new IllegalStateException("IOException while sending bytes", e);
+		}
 	}
 	
 	public void sendln(String line) {
