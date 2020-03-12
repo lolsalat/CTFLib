@@ -1,5 +1,5 @@
 # CTFLib
-This requires ApacheHTTPClient library as well as the Google GSON library (I think this one is no longer needed?)
+This requires ApacheHTTPClient library
 
 Works with Java11 idk about lower versions (Should not require any major changes if you really need that though)
 
