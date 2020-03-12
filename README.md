@@ -5,6 +5,8 @@ Works with Java11 idk about lower versions (Should not require any major changes
 
 I will add JavaDoc and more examples at some point. (As well as more content)
 
+Just don't use it atm (or don't blame me if it doesn't work)
+
 ### Code snippets
 
 #### Http GET and POST requests
