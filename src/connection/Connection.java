@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.ProcessBuilder.Redirect;
+import java.math.BigInteger;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
@@ -40,12 +41,11 @@ public abstract class Connection {
 		
 		// TODO this will redirect error stream to STDERR which is kinda not really what we want :D
 		
-		ProcessBuilder builder = new ProcessBuilder(command).redirectError(Redirect.INHERIT);
+		ProcessBuilder builder = new ProcessBuilder(command);
 		
 		Process p;
 		try {
-			p = builder.start();
-			System.out.println(p.pid());
+			p = builder.redirectError(Redirect.INHERIT).start();
 		} catch (IOException e) {
 			throw new IllegalStateException("IOException while starting process!");
 		}
@@ -206,6 +206,14 @@ public abstract class Connection {
 		return first + readUntil(c -> !"0123456789".contains(c + ""));
 	}
 	
+	public String readHex() {
+		return readUntil(c -> !"0123456789abcdefABCDEF".contains(c + ""));
+	}
+	
+	public BigInteger readHexNum() {
+		return new BigInteger(readHex(), 16);
+	}
+	
 	public String readUntil(Function<Character, Boolean> end) {
 		String result = "";
 		Character cur;
@@ -250,6 +258,10 @@ public abstract class Connection {
 	
 	public void sendln(Object o) {
 		sendln(o.toString());
+	}
+	
+	public void sendln(ByteBuffer buffer) {
+		sendln(buffer.array());
 	}
 	
 	public void send(String text) {

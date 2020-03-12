@@ -5,7 +5,7 @@ import java.lang.annotation.RetentionPolicy;
 
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Task {
-
+	
 	public String value();
 	
 	public String flagPattern() default "\\{..*\\}";

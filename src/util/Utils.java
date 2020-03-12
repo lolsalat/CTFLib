@@ -1,6 +1,9 @@
 package util;
 
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -11,6 +14,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
+import java.util.zip.CRC32;
 
 public class Utils {
 
@@ -18,8 +22,73 @@ public class Utils {
 	
 	public static final String hexChars = "0123456789abcdef";
 	
+	public static byte[] md5(byte[] input) {
+		MessageDigest md;
+		try {
+			md = MessageDigest.getInstance("MD5");
+		    return md.digest(input);
+		} catch (NoSuchAlgorithmException e) {
+			throw new RuntimeException("I guess MD5 is not a thing?", e);
+		}
+	}
+	
+	public static String shift(String input, int amount, int mod, int offset) {
+		char[] chars = input.toCharArray();
+		StringBuilder builder = new StringBuilder();
+		
+		for(int i = 0; i < chars.length; i++) {
+			int result = chars[i] + amount;
+			if(result > mod) {
+				result -= mod - offset;
+			}
+			if(result < 0) {
+				result += mod;
+			}
+			builder.append((char)result);
+		}
+		
+		return builder.toString();
+	}
+	
+	public static byte[] hash(String algo, byte[] input) {
+		if(algo.toLowerCase().equals("crc32")) {
+			CRC32 c = new CRC32();
+			c.update(input);
+			return ByteBuffer.allocate(8).putLong(c.getValue()).array();
+		}
+		MessageDigest md;
+		try {
+			md = MessageDigest.getInstance(algo);
+		    return md.digest(input);
+		} catch (NoSuchAlgorithmException e) {
+			throw new RuntimeException("I guess " + algo + " is not a thing?", e);
+		}
+	}
+	
+	public static byte[] sha1(byte[] input) {
+		MessageDigest md;
+		try {
+			md = MessageDigest.getInstance("SHA-1");
+		    return md.digest(input);
+		} catch (NoSuchAlgorithmException e) {
+			throw new RuntimeException("I guess SHA-1 is not a thing?", e);
+		}
+	}
+	
 	public static long address64(long value) {
 		return new BigInteger(p64(value)).longValue();
+	}
+	
+	public static byte[] fromHex(String hex) {
+		
+		char[] chars = hex.toLowerCase().toCharArray();
+		byte[] ret = new byte[chars.length / 2];
+		
+		for(int i = 0; i < ret.length; i ++ ) {
+			ret[i] = (byte) (((hexChars.indexOf(chars[2 * i])) << 4) + (hexChars.indexOf(chars[2 * i + 1])));
+		}
+		
+		return ret;
 	}
 	
 	public static String hex(byte[] data) {

@@ -2,14 +2,15 @@ package task;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -49,8 +50,35 @@ public class TaskExecutor {
 		addDefaultReturnFunction(Boolean.TYPE, b -> b ? Result.SUCCESS : Result.FAIL);
 	}
 	
-	public TaskExecutor() {
+	public static void runExploits(Class<?> ...clazzes) {
+		runExploits(new TaskExecutor(), clazzes);
+	}
+	
+	public static void runExploits(TaskExecutor exec, Class<?> ... clazzes) {
 		
+		for(Class<?> clazz : clazzes) {
+			Set<Entry<String, ExecutionResult<?>>> results = exec.wholeClass(clazz).entrySet();
+			
+			System.out.println();
+			
+			for(Entry<String, ExecutionResult<?>> r : results) {
+				String name = r.getKey();
+				ExecutionResult<?> result = r.getValue();
+				
+				if(result.wasException()) {
+					System.err.printf("Exception executing task %s:\n", name);
+					result.exception.printStackTrace(System.err);
+					System.err.println();
+				}
+				
+				System.out.printf("Executed task '%s' with result %s (%d flags):\n", name, result.result, result.flags.size());
+				result.flags.forEach(x -> System.out.println("  -> " + x));
+				
+			}
+		}
+	}
+	
+	public TaskExecutor() {
 		variables = new HashMap<>();
 		returnFunctions = new HashMap<>();
 		
@@ -82,6 +110,12 @@ public class TaskExecutor {
 			@Override
 			public void println(char s) {
 				super.println(String.format("[%s]: %c", taskName, s));
+			}
+			
+			@Override
+			public PrintStream printf(String s, Object... formatters) {
+				super.printf("[" + taskName + "]: "  + s, formatters);
+				return this;
 			}
 			
 		};
@@ -188,23 +222,28 @@ public class TaskExecutor {
 		newFlags();
 		
 		try {
-			Optional<Object> returnValue = Utils.withTimeout(() -> {
+			
+			
+			Optional<Object> returnValue = 
+					Utils.withTimeout(() -> {
 				try {
 					return m.invoke(null, args);
-				} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-					throw new RuntimeException("Cannot invoke method", e);
+				} catch(Exception ex) {
+					return ex.getCause();
 				}
 			}, timeout);
 			
 			findFlags(new String(flagOut.toByteArray(), t.encoding()));
 			Collection<String> collectedFlags = this.collectedFlags;
 			flagOut.reset();
-			
 			Result result;
+			
 			if(returnValue == null) {
 				result = returnFunctions.get(m.getReturnType()).apply(null);
 			} else if(returnValue.isEmpty()) {
 				result = Result.TIMEOUT;
+			} else if(returnValue.get() instanceof Exception) {
+				return ExecutionResult.create(collectedFlags, (Exception)returnValue.get(), Result.EXCEPTION, null);
 			} else if(returnFunctions.containsKey(m.getReturnType())) {
 				result = returnFunctions.get(m.getReturnType()).apply(returnValue.get());
 			} else {
