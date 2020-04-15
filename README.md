@@ -1,5 +1,6 @@
 # CTFLib
-This requires ApacheHTTPClient library
+This requires ApacheHTTPClient library as well as GSON.
+Since this uses Maven, you don't really have to care about dependencies though (except for ghidra).
 
 Works with Java11 idk about lower versions (Should not require any major changes if you really need that though)
 
