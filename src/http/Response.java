@@ -6,6 +6,11 @@ import java.util.Collection;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
 public class Response {
 
 	public static Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
@@ -30,6 +35,18 @@ public class Response {
 		this.statusCode = statusCode;
 		this.data = data;
 		this.setCookie = setCookie;
+	}
+	
+	public JsonObject jsonObject() {
+		return json().getAsJsonObject();
+	}
+	
+	public JsonArray jsonArray() {
+		return json().getAsJsonArray();
+	}
+	
+	public JsonElement json() {
+		return JsonParser.parseString(text());
 	}
 	
 	public boolean hasData() {

@@ -47,6 +47,7 @@ public abstract class Connection {
 		try {
 			p = builder.redirectError(Redirect.INHERIT).start();
 		} catch (IOException e) {
+			e.printStackTrace();
 			throw new IllegalStateException("IOException while starting process!");
 		}
 		
@@ -204,6 +205,15 @@ public abstract class Connection {
 		if(!"-0123456789".contains(first + ""))
 			return "";
 		return first + readUntil(c -> !"0123456789".contains(c + ""));
+	}
+	
+	public long readAddr() {
+		String s = readUntil("(nil|0x)");
+		
+		if(s.endsWith("nil"))
+			return 0;
+		
+		return readHexNum().longValue();
 	}
 	
 	public String readHex() {

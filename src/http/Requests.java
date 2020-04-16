@@ -247,7 +247,8 @@ public class Requests {
 				addHeaderParams(request, params);
 				break;
 			case POST:
-				throw new IllegalStateException("Get-request cannot have POST parameters!");
+				System.err.println("Get-request cannot have POST parameters!");
+				break;
 			case UNKNOWN:
 				throw new IllegalStateException("Cannot handle parameters with unknown type!");
 			default:
