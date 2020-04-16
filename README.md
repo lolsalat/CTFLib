@@ -1,15 +1,15 @@
 # CTFLib
 This requires ApacheHTTPClient library as well as GSON.
-Since this uses Maven, you don't really have to care about dependencies though (except for ghidra).
-
-## Add Ghidra
-You need to compile ghidra to a jar file and put it into the lib folder (it has to be named ghidra.jar)
-
+Since this uses Maven, you don't really have to care about dependencies though (except for ghidra see below).
 Works with Java11 idk about lower versions (Should not require any major changes if you really need that though)
 
 I will add JavaDoc and more examples at some point. (As well as more content)
 
 Just don't use it atm (or don't blame me if it doesn't work)
+
+## Add Ghidra
+You need to compile ghidra to a jar file and put it into the lib folder (it has to be named ghidra.jar) <br>
+see https://ghidra-sre.org/InstallationGuide.html#RunJar on how to do that
 
 ### Code snippets
 
