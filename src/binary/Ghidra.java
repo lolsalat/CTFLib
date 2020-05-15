@@ -55,6 +55,42 @@ public class Ghidra {
 		throw new IllegalArgumentException("No stack variable named '" + variableName + "' found");
 	}
 	
+	
+	public static Project openProject(String path, String name, boolean silent) {
+		try {
+			// Define Ghidra components
+			GhidraProject ghidraProject;
+			
+			if(silent) {
+				System.setOut(dummyOut);
+				System.setErr(dummyOut);
+			}
+			
+			// Initialize application
+			if (!Application.isInitialized()) {
+				ApplicationConfiguration configuration = new HeadlessGhidraApplicationConfiguration();
+				configuration.setInitializeLogging(false);
+				Application.initializeApplication(new GhidraJarApplicationLayout(), configuration);
+			}
+
+			ghidraProject = GhidraProject.openProject(path, name);
+
+			if(silent) {
+				System.setOut(out);
+				System.setErr(err);
+			}
+			
+			return new Project(ghidraProject);
+
+		} catch (Exception e) {
+			if(silent) {
+				System.setOut(out);
+				System.setErr(err);
+			}
+			throw new RuntimeException(e);
+		}
+	}
+	
 	public static Program[] openPrograms(String project, String name, boolean silent, String... programs) {
 		try {
 			// Define Ghidra components
