@@ -8,9 +8,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -57,13 +55,18 @@ public class TaskExecutor {
 	public static void runExploits(TaskExecutor exec, Class<?> ... clazzes) {
 		
 		for(Class<?> clazz : clazzes) {
-			Set<Entry<String, ExecutionResult<?>>> results = exec.wholeClass(clazz).entrySet();
-			
-			System.out.println();
-			
-			for(Entry<String, ExecutionResult<?>> r : results) {
-				String name = r.getKey();
-				ExecutionResult<?> result = r.getValue();
+			for(Method m : clazz.getMethods()) {
+				if(!m.isAnnotationPresent(Task.class))
+					continue;
+				
+				Task t = m.getAnnotation(Task.class);
+				
+				ExecutionResult<?> result = exec.execute(m);
+				
+
+				System.out.println();
+				
+				String name = t.value();
 				
 				if(result.wasException()) {
 					System.err.printf("Exception executing task %s:\n", name);
@@ -73,7 +76,7 @@ public class TaskExecutor {
 				
 				System.out.printf("Executed task '%s' with result %s (%d flags):\n", name, result.result, result.flags.size());
 				result.flags.forEach(x -> System.out.println("  -> " + x));
-				
+				System.err.println();
 			}
 		}
 	}
