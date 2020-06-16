@@ -23,7 +23,6 @@ public abstract class Connection {
 	private boolean inputDead;
 	private boolean outputDead;
 	private boolean verbose;
-
 	
 	public static InputStreamOutputStreamConnection remote(String host, int port) {
 		try {
@@ -188,6 +187,7 @@ public abstract class Connection {
 				buffer = new byte[lastBuffer.length + available];
 				System.arraycopy(lastBuffer, 0, buffer, 0, lastBuffer.length);
 				read(buffer, lastBuffer.length, available);
+				lastBuffer = buffer;
 			}
 			close();
 			return buffer;
@@ -198,6 +198,10 @@ public abstract class Connection {
 	
 	public int readInt() {
 		return Integer.parseInt(readNumber());
+	}
+	
+	public double readDouble() {
+		return Double.parseDouble(readNumber() + "." + readNumber());
 	}
 	
 	public String readNumber() {
